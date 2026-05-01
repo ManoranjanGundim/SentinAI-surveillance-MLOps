@@ -3,220 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SentinAI - Command Center</title>
+    <title>SentinAI | Command Center</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { 
-            background-color: #0d1117; color: #c9d1d9; 
-            font-family: 'Segoe UI', sans-serif; margin: 0; 
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .header {
-            width: 100%; background-color: #161b22; padding: 20px 0;
-            text-align: center; border-bottom: 2px solid #30363d;
-        }
-        h1 { margin: 0; color: #58a6ff; font-size: 2.5rem; letter-spacing: 2px; }
-        .dashboard {
-            margin-top: 30px; display: flex; flex-direction: column;
-            align-items: center; width: 90%; max-width: 900px;
-        }
-        
-        /* NEW: Source Controls */
-        .source-controls {
-            margin-bottom: 15px; display: flex; gap: 10px; width: 100%; justify-content: center;
-        }
-        .btn {
-            background-color: #238636; color: white; border: none; padding: 10px 20px;
-            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn:hover { background-color: #2ea043; }
-        .btn-alt { background-color: #1f6feb; }
-        .btn-alt:hover { background-color: #388bfd; }
-
-        .camera-feed {
-            border: 4px solid #30363d; border-radius: 12px;
-            overflow: hidden; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); width: 100%;
-        }
-        .camera-feed img { width: 100%; display: block; }
-        
-        #threat-panel {
-            display: none; width: 100%; margin-top: 20px;
-            background-color: #21262d; border: 2px solid #f85149;
-            border-radius: 12px; padding: 20px; text-align: center;
-            box-sizing: border-box;
-        }
-        #threat-panel h2 { margin-top: 0; color: #ff7b72; }
-        .grid-container {
-            display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px;
-        }
-        .grid-item {
-            background: #161b22; padding: 10px; border-radius: 8px;
-            border: 1px solid #30363d; width: 22%;
-        }
-        .grid-item img { width: 100%; border-radius: 4px; }
-        .match-score { color: #3fb950; font-weight: bold; margin-top: 5px; font-size: 0.9rem; }
+        /* Custom glow effects for the security vibe */
+        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); border-color: #ef4444; }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); border-color: #22c55e; }
+        .feed-container { position: relative; width: 100%; padding-top: 56.25%; /* 16:9 Aspect Ratio */ background-color: #000; border-radius: 0.5rem; overflow: hidden; }
+        .feed-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-100 font-sans h-screen flex flex-col overflow-hidden">
 
-    <div class="header">
-        <h1>🛡️ SentinAI Command Center</h1>
-    </div>
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-lg z-10">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-shield-halved text-blue-500 text-2xl"></i>
+            <h1 class="text-2xl font-bold tracking-wider text-white">SENTIN<span class="text-blue-500">AI</span> <span class="text-xs text-gray-500 font-mono align-top ml-1">v2.0</span></h1>
+        </div>
+        <div class="flex items-center space-x-4 text-sm font-mono text-gray-400">
+            <span><i class="fa-solid fa-server mr-1"></i> AWS EC2 LIVE</span>
+            <span id="system-time">00:00:00</span>
+        </div>
+    </header>
 
-    <div class="dashboard">
+    <!-- Main Dashboard -->
+    <main class="flex-1 flex overflow-hidden p-6 gap-6">
         
-        <div class="source-controls">
-            <input type="file" id="video-upload" accept="video/*" style="display: none;">
+        <!-- Left Column: Video Feed & Search -->
+        <div class="flex-1 flex flex-col gap-6 overflow-y-auto pr-2">
             
-            <button class="btn btn-alt" onclick="document.getElementById('video-upload').click()" id="upload-btn">
-                📂 Upload CCTV File
-            </button>
-            <button class="btn" onclick="switchSource('webcam')">🎥 Live Webcam</button>
+            <!-- Live Camera Feed -->
+            <section class="bg-gray-900 rounded-xl p-1 border border-gray-800 shadow-2xl transition-all duration-300" id="video-panel">
+                <div class="bg-gray-800 rounded-t-lg p-2 px-4 flex justify-between items-center border-b border-gray-700">
+                    <h2 class="text-sm font-bold tracking-widest text-gray-300 uppercase"><i class="fa-solid fa-video text-red-500 mr-2 animate-pulse"></i> Camera 01 - Main Feed</h2>
+                </div>
+                <div class="feed-container">
+                    <img src="/video_feed" alt="Live Video Feed" id="video-stream">
+                </div>
+            </section>
+
+            <!-- Semantic Search Panel -->
+            <section class="bg-gray-900 rounded-xl p-5 border border-gray-800 shadow-xl">
+                <h2 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-magnifying-glass mr-2"></i> Cognitive Semantic Search</h2>
+                
+                <div class="flex gap-3 mb-6">
+                    <input type="text" id="search-input" placeholder="e.g., 'Person holding a weapon' or 'Red backpack'" class="flex-1 bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 transition-colors">
+                    <button onclick="performSearch()" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-3 transition-colors flex items-center">
+                        <i class="fa-solid fa-bolt mr-2"></i> Search
+                    </button>
+                </div>
+
+                <!-- Search Results Grid -->
+                <div id="search-results" class="grid grid-cols-3 gap-4 hidden">
+                    <!-- Results populated by JS -->
+                </div>
+            </section>
         </div>
 
-        <div class="camera-feed">
-            <img src="{{ url_for('video_feed') }}" alt="Live Camera Feed" id="video-stream">
-        </div>
-        <div style="text-align: center; margin-top: 20px; padding: 15px; background-color: #1e2124; border-radius: 12px; width: 100%; border: 1px solid #58a6ff; box-sizing: border-box;">
-            <h3 style="color: white; margin-top: 0; margin-bottom: 10px;">🔍 AI Suspect Text Search</h3>
-            <div style="display: flex; justify-content: center; gap: 10px;">
-                <input type="text" id="aiSearchInput" placeholder="Describe a suspect (e.g., 'man in a blue shirt')" 
-                       style="padding: 10px; width: 60%; border-radius: 6px; border: none; outline: none; font-size: 16px;">
-                <button onclick="runTextSearch(event)" 
-                        style="padding: 10px 20px; background-color: #58a6ff; color: #0d1117; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px;">
-                    Search Database
-                </button>
-            </div>
-        </div>
+        <!-- Right Column: Status & Controls -->
+        <div class="w-96 flex flex-col gap-6">
+            
+            <!-- Threat Status Monitor -->
+            <section class="bg-gray-900 rounded-xl p-5 border border-gray-800 shadow-xl flex flex-col">
+                <h2 class="text-sm font-bold tracking-widest text-gray-400 uppercase mb-4">System Status</h2>
+                
+                <div id="status-indicator" class="flex-1 flex flex-col items-center justify-center p-6 rounded-lg border-2 glow-green bg-gray-800/50 transition-all duration-500">
+                    <i id="status-icon" class="fa-solid fa-shield-check text-5xl text-green-500 mb-3"></i>
+                    <h3 id="status-text" class="text-xl font-bold text-green-500 uppercase tracking-widest">Secure</h3>
+                    <p class="text-gray-400 text-sm mt-2 text-center">No anomalies detected</p>
+                </div>
 
-        <div id="text-search-panel" style="display: none; width: 100%; margin-top: 20px; background-color: #21262d; border: 2px solid #58a6ff; border-radius: 12px; padding: 20px; text-align: center; box-sizing: border-box;">
-            <h2 style="margin-top: 0; color: #58a6ff;">🔎 SEARCH RESULTS FOUND 🔎</h2>
-            <div class="grid-container" id="text-matches-grid"></div>
-        </div>
+                <!-- Suspect Details (Hidden by default) -->
+                <div id="suspect-panel" class="mt-4 hidden animate-fade-in-down">
+                    <h4 class="text-xs font-bold text-red-500 uppercase mb-2">Captured Frame</h4>
+                    <img id="suspect-image" src="" class="w-full rounded border border-red-500 shadow-lg" alt="Suspect">
+                </div>
+            </section>
 
-        <div id="threat-panel">
-            <h2>🚨 THREAT INTELLIGENCE: SUSPECT MATCHES FOUND 🚨</h2>
-            <div class="grid-container" id="matches-grid"></div>
-        </div>
-    </div>
+            <!-- Control Panel -->
+            <section class="bg-gray-900 rounded-xl p-5 border border-gray-800 shadow-xl">
+                <h2 class="text-sm font-bold tracking-widest text-gray-400 uppercase mb-4">Source Controls</h2>
+                
+                <div class="space-y-4">
+                    <button onclick="setSource('video')" class="w-full text-left px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded border border-gray-700 transition-colors flex items-center group">
+                        <i class="fa-solid fa-film w-6 text-gray-400 group-hover:text-white"></i> 
+                        <span class="text-sm font-medium">Default Test Video</span>
+                    </button>
+                    
+                    <button onclick="setSource('webcam')" class="w-full text-left px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded border border-gray-700 transition-colors flex items-center group">
+                        <i class="fa-solid fa-mobile-screen w-6 text-gray-400 group-hover:text-white"></i> 
+                        <span class="text-sm font-medium">Mobile IP Camera</span>
+                    </button>
 
+                    <div class="relative mt-4">
+                        <input type="file" id="video-upload" class="hidden" accept="video/*" onchange="uploadVideo()">
+                        <label for="video-upload" class="w-full cursor-pointer text-center block px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded border border-dashed border-gray-600 transition-colors">
+                            <i class="fa-solid fa-cloud-arrow-up mr-2 text-blue-400"></i>
+                            <span class="text-sm font-medium text-gray-300" id="upload-text">Upload Custom Video</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Interactive JavaScript -->
     <script>
-        // --- FEATURE 1 & 2: Video Switching & Live Polling ---
-        function switchSource(sourceType) {
-            fetch('/api/set_source/' + sourceType)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Source switched to:", data.source);
-                    document.getElementById('video-stream').src = "{{ url_for('video_feed') }}?" + new Date().getTime();
-                });
+        // Real-time Clock
+        setInterval(() => {
+            document.getElementById('system-time').innerText = new Date().toLocaleTimeString('en-US', { hour12: false });
+        }, 1000);
+
+        // --- API POLLING: Threat Detection Loop ---
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/threat_status');
+                const data = await response.json();
+                
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusIcon = document.getElementById('status-icon');
+                const statusText = document.getElementById('status-text');
+                const videoPanel = document.getElementById('video-panel');
+                const suspectPanel = document.getElementById('suspect-panel');
+                const suspectImage = document.getElementById('suspect-image');
+
+                if (data.caught) {
+                    // THREAT DETECTED STATE (Red)
+                    statusIndicator.className = "flex-1 flex flex-col items-center justify-center p-6 rounded-lg border-2 glow-red bg-gray-800/50 transition-all duration-500";
+                    statusIcon.className = "fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-3 animate-bounce";
+                    statusText.className = "text-xl font-bold text-red-500 uppercase tracking-widest";
+                    statusText.innerText = "THREAT DETECTED";
+                    videoPanel.classList.add("glow-red");
+                    
+                    suspectPanel.classList.remove('hidden');
+                    // Add timestamp to force image refresh
+                    suspectImage.src = data.suspect_image + "?t=" + new Date().getTime();
+                } else {
+                    // SECURE STATE (Green)
+                    statusIndicator.className = "flex-1 flex flex-col items-center justify-center p-6 rounded-lg border-2 glow-green bg-gray-800/50 transition-all duration-500";
+                    statusIcon.className = "fa-solid fa-shield-check text-5xl text-green-500 mb-3";
+                    statusText.className = "text-xl font-bold text-green-500 uppercase tracking-widest";
+                    statusText.innerText = "Secure";
+                    videoPanel.classList.remove("glow-red");
+                    
+                    suspectPanel.classList.add('hidden');
+                }
+            } catch (err) {
+                console.error("Error polling threat status:", err);
+            }
+        }, 1500); // Check every 1.5 seconds
+
+        // --- CONTROLS: Change Source ---
+        async function setSource(type) {
+            await fetch(`/api/set_source/${type}`);
+            // Force reload the video feed image to reset the stream
+            const stream = document.getElementById('video-stream');
+            stream.src = "/video_feed?t=" + new Date().getTime();
         }
-        
-        document.getElementById('video-upload').addEventListener('change', function(e) {
-            let file = e.target.files[0];
+
+        // --- CONTROLS: Upload Video ---
+        async function uploadVideo() {
+            const fileInput = document.getElementById('video-upload');
+            const file = fileInput.files[0];
             if (!file) return;
 
-            let formData = new FormData();
+            document.getElementById('upload-text').innerText = "Uploading...";
+
+            const formData = new FormData();
             formData.append('video', file);
 
-            let btn = document.getElementById('upload-btn');
-            let originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Uploading...";
-
-            fetch('/api/upload_video', {
+            const response = await fetch('/api/upload_video', {
                 method: 'POST',
                 body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Source switched to uploaded file:", data.source);
-                btn.innerHTML = originalText; 
-                document.getElementById('video-stream').src = "{{ url_for('video_feed') }}?" + new Date().getTime();
-            })
-            .catch(error => {
-                console.error("Error uploading video:", error);
-                btn.innerHTML = "❌ Upload Failed";
-                setTimeout(() => btn.innerHTML = originalText, 3000);
             });
-        });
 
-        setInterval(function() {
-            fetch('/api/threat_status')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.caught) {
-                        document.getElementById('threat-panel').style.display = 'block';
-                        document.getElementById('text-search-panel').style.display = 'none'; // Hide text search if active threat
-                        
-                        let gridHtml = `
-                            <div class="grid-item" style="border-color: #f85149;">
-                                <img src="${data.suspect_image}?t=${new Date().getTime()}" alt="Suspect">
-                                <div style="color: #ff7b72; font-weight: bold; margin-top: 5px;">CAUGHT ON CAMERA</div>
-                            </div>
-                        `;
-                        data.matches.forEach((match, index) => {
-                            gridHtml += `
-                                <div class="grid-item">
-                                    <img src="${match.image}?t=${new Date().getTime()}" alt="Database Match">
-                                    <div class="match-score">Match ${index + 1}: ${match.score.toFixed(1)}%</div>
-                                </div>
-                            `;
-                        });
-                        document.getElementById('matches-grid').innerHTML = gridHtml;
-                    }
-                });
-        }, 2000);
-
-        // --- FEATURE 3: AI Text Search ---
-        function runTextSearch(event) {
-            const query = document.getElementById("aiSearchInput").value;
-            if (!query) {
-                alert("Please enter a description to search!");
-                return;
+            if (response.ok) {
+                document.getElementById('upload-text').innerText = "Upload Complete!";
+                const stream = document.getElementById('video-stream');
+                stream.src = "/video_feed?t=" + new Date().getTime();
+                setTimeout(() => { document.getElementById('upload-text').innerText = "Upload Custom Video"; }, 3000);
             }
+        }
 
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "⏳ Searching...";
+        // --- CONTROLS: Semantic Search ---
+        async function performSearch() {
+            const query = document.getElementById('search-input').value;
+            if (!query) return;
 
-            fetch('/api/search_text', {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '<div class="col-span-3 text-center py-4 text-gray-400"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Searching vector database...</div>';
+            resultsContainer.classList.remove('hidden');
+
+            const response = await fetch('/api/search_text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: query })
-            })
-            .then(response => response.json())
-            .then(data => {
-                btn.innerText = originalText;
-                
-                if (data.status === 'success') {
-                    // Hide the live threat panel and show the search panel
-                    document.getElementById('threat-panel').style.display = 'none';
-                    document.getElementById('text-search-panel').style.display = 'block';
-                    
-                    let gridHtml = `
-                        <div class="grid-item" style="border-color: #58a6ff;">
-                            <div style="color: #58a6ff; font-weight: bold; margin-bottom: 10px;">PROMPT ANALYZED</div>
-                            <h3 style="color: white; margin: 0;">"${query}"</h3>
+            });
+            const data = await response.json();
+
+            resultsContainer.innerHTML = ''; // Clear loading
+
+            if (data.status === 'success' && data.matches.length > 0) {
+                data.matches.forEach(match => {
+                    resultsContainer.innerHTML += `
+                        <div class="relative group rounded overflow-hidden border border-gray-700 aspect-square bg-gray-800">
+                            <img src="${match.image}?t=${new Date().getTime()}" class="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110">
+                            <div class="absolute bottom-0 w-full bg-black/70 p-2 text-center border-t border-gray-700">
+                                <span class="text-xs font-bold text-blue-400">${match.score}% Match</span>
+                            </div>
                         </div>
                     `;
-                    
-                    data.matches.forEach((match, index) => {
-                        gridHtml += `
-                            <div class="grid-item">
-                                <img src="${match.image}?t=${new Date().getTime()}" alt="Text Match">
-                                <div class="match-score">Match ${index + 1}: ${match.score.toFixed(1)}%</div>
-                            </div>
-                        `;
-                    });
-                    
-                    document.getElementById('text-matches-grid').innerHTML = gridHtml;
-                } else {
-                    alert("⚠️ Search failed: " + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                btn.innerText = originalText;
-                alert("Error connecting to the AI Search Engine.");
-            });
+                });
+            } else {
+                resultsContainer.innerHTML = '<div class="col-span-3 text-center text-red-400 text-sm">No matches found in database.</div>';
+            }
         }
     </script>
 </body>
