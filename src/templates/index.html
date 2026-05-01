@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinAI - Command Center</title>
+    <style>
+        body { 
+            background-color: #0d1117; color: #c9d1d9; 
+            font-family: 'Segoe UI', sans-serif; margin: 0; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .header {
+            width: 100%; background-color: #161b22; padding: 20px 0;
+            text-align: center; border-bottom: 2px solid #30363d;
+        }
+        h1 { margin: 0; color: #58a6ff; font-size: 2.5rem; letter-spacing: 2px; }
+        .dashboard {
+            margin-top: 30px; display: flex; flex-direction: column;
+            align-items: center; width: 90%; max-width: 900px;
+        }
+        
+        /* NEW: Source Controls */
+        .source-controls {
+            margin-bottom: 15px; display: flex; gap: 10px; width: 100%; justify-content: center;
+        }
+        .btn {
+            background-color: #238636; color: white; border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn:hover { background-color: #2ea043; }
+        .btn-alt { background-color: #1f6feb; }
+        .btn-alt:hover { background-color: #388bfd; }
+
+        .camera-feed {
+            border: 4px solid #30363d; border-radius: 12px;
+            overflow: hidden; box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); width: 100%;
+        }
+        .camera-feed img { width: 100%; display: block; }
+        
+        #threat-panel {
+            display: none; width: 100%; margin-top: 20px;
+            background-color: #21262d; border: 2px solid #f85149;
+            border-radius: 12px; padding: 20px; text-align: center;
+            box-sizing: border-box;
+        }
+        #threat-panel h2 { margin-top: 0; color: #ff7b72; }
+        .grid-container {
+            display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px;
+        }
+        .grid-item {
+            background: #161b22; padding: 10px; border-radius: 8px;
+            border: 1px solid #30363d; width: 22%;
+        }
+        .grid-item img { width: 100%; border-radius: 4px; }
+        .match-score { color: #3fb950; font-weight: bold; margin-top: 5px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛡️ SentinAI Command Center</h1>
+    </div>
+
+    <div class="dashboard">
+        
+        <div class="source-controls">
+            <input type="file" id="video-upload" accept="video/*" style="display: none;">
+            
+            <button class="btn btn-alt" onclick="document.getElementById('video-upload').click()" id="upload-btn">
+                📂 Upload CCTV File
+            </button>
+            <button class="btn" onclick="switchSource('webcam')">🎥 Live Webcam</button>
+        </div>
+
+        <div class="camera-feed">
+            <img src="{{ url_for('video_feed') }}" alt="Live Camera Feed" id="video-stream">
+        </div>
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background-color: #1e2124; border-radius: 12px; width: 100%; border: 1px solid #58a6ff; box-sizing: border-box;">
+            <h3 style="color: white; margin-top: 0; margin-bottom: 10px;">🔍 AI Suspect Text Search</h3>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <input type="text" id="aiSearchInput" placeholder="Describe a suspect (e.g., 'man in a blue shirt')" 
+                       style="padding: 10px; width: 60%; border-radius: 6px; border: none; outline: none; font-size: 16px;">
+                <button onclick="runTextSearch(event)" 
+                        style="padding: 10px 20px; background-color: #58a6ff; color: #0d1117; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                    Search Database
+                </button>
+            </div>
+        </div>
+
+        <div id="text-search-panel" style="display: none; width: 100%; margin-top: 20px; background-color: #21262d; border: 2px solid #58a6ff; border-radius: 12px; padding: 20px; text-align: center; box-sizing: border-box;">
+            <h2 style="margin-top: 0; color: #58a6ff;">🔎 SEARCH RESULTS FOUND 🔎</h2>
+            <div class="grid-container" id="text-matches-grid"></div>
+        </div>
+
+        <div id="threat-panel">
+            <h2>🚨 THREAT INTELLIGENCE: SUSPECT MATCHES FOUND 🚨</h2>
+            <div class="grid-container" id="matches-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- FEATURE 1 & 2: Video Switching & Live Polling ---
+        function switchSource(sourceType) {
+            fetch('/api/set_source/' + sourceType)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Source switched to:", data.source);
+                    document.getElementById('video-stream').src = "{{ url_for('video_feed') }}?" + new Date().getTime();
+                });
+        }
+        
+        document.getElementById('video-upload').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            let formData = new FormData();
+            formData.append('video', file);
+
+            let btn = document.getElementById('upload-btn');
+            let originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Uploading...";
+
+            fetch('/api/upload_video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Source switched to uploaded file:", data.source);
+                btn.innerHTML = originalText; 
+                document.getElementById('video-stream').src = "{{ url_for('video_feed') }}?" + new Date().getTime();
+            })
+            .catch(error => {
+                console.error("Error uploading video:", error);
+                btn.innerHTML = "❌ Upload Failed";
+                setTimeout(() => btn.innerHTML = originalText, 3000);
+            });
+        });
+
+        setInterval(function() {
+            fetch('/api/threat_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.caught) {
+                        document.getElementById('threat-panel').style.display = 'block';
+                        document.getElementById('text-search-panel').style.display = 'none'; // Hide text search if active threat
+                        
+                        let gridHtml = `
+                            <div class="grid-item" style="border-color: #f85149;">
+                                <img src="${data.suspect_image}?t=${new Date().getTime()}" alt="Suspect">
+                                <div style="color: #ff7b72; font-weight: bold; margin-top: 5px;">CAUGHT ON CAMERA</div>
+                            </div>
+                        `;
+                        data.matches.forEach((match, index) => {
+                            gridHtml += `
+                                <div class="grid-item">
+                                    <img src="${match.image}?t=${new Date().getTime()}" alt="Database Match">
+                                    <div class="match-score">Match ${index + 1}: ${match.score.toFixed(1)}%</div>
+                                </div>
+                            `;
+                        });
+                        document.getElementById('matches-grid').innerHTML = gridHtml;
+                    }
+                });
+        }, 2000);
+
+        // --- FEATURE 3: AI Text Search ---
+        function runTextSearch(event) {
+            const query = document.getElementById("aiSearchInput").value;
+            if (!query) {
+                alert("Please enter a description to search!");
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ Searching...";
+
+            fetch('/api/search_text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerText = originalText;
+                
+                if (data.status === 'success') {
+                    // Hide the live threat panel and show the search panel
+                    document.getElementById('threat-panel').style.display = 'none';
+                    document.getElementById('text-search-panel').style.display = 'block';
+                    
+                    let gridHtml = `
+                        <div class="grid-item" style="border-color: #58a6ff;">
+                            <div style="color: #58a6ff; font-weight: bold; margin-bottom: 10px;">PROMPT ANALYZED</div>
+                            <h3 style="color: white; margin: 0;">"${query}"</h3>
+                        </div>
+                    `;
+                    
+                    data.matches.forEach((match, index) => {
+                        gridHtml += `
+                            <div class="grid-item">
+                                <img src="${match.image}?t=${new Date().getTime()}" alt="Text Match">
+                                <div class="match-score">Match ${index + 1}: ${match.score.toFixed(1)}%</div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('text-matches-grid').innerHTML = gridHtml;
+                } else {
+                    alert("⚠️ Search failed: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.innerText = originalText;
+                alert("Error connecting to the AI Search Engine.");
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
 [core]
-    remote = local_storage
+    remote = myremote
 ['remote "local_storage"']
     url = ../../sentinai_dvc_storage
+['remote "myremote"']
+    url = s3://sentinai-dvc-storage-ranjan/dvc-storage

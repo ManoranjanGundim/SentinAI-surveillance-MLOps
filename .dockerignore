@@ -1,0 +1,14 @@
+# Block Virtual Environments (The 8GB culprits!)
+venv/
+.venv/
+env/
+Lib/
+Scripts/
+
+# Block Cache and Git
+__pycache__/
+*.pyc
+.git/
+.dvc/
+
+# (Note: Make sure any massive 5GB+ test videos are physically moved out of your Windows folder!)

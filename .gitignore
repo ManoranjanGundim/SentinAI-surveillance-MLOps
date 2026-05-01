@@ -1,0 +1,24 @@
+# Ignore Dataset and Extracted Features
+data/
+/data
+
+# Ignore heavy AI Model files
+models/
+/models
+*.h5
+*.npy
+*.pt
+*.pth
+
+# SentinAI Active Learning Loop
+flagged_data/
+
+# Ignore Python caching and virtual environments
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS Files & Secrets
+.DS_Store
+.env
