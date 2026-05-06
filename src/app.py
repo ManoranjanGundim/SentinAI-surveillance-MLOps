@@ -39,7 +39,7 @@ SEQ_LENGTH = 15
 TOP_K_SEARCH = 3
 
 SENDER_EMAIL = "granjan050804@gmail.com"
-EMAIL_PASSWORD = "gpjawqkvaogepoml" 
+EMAIL_PASSWORD = "dxfzbfyzrcxbfhcc" 
 RECEIVER_EMAIL = "granjan050804@gmail.com" 
 
 app = Flask(__name__)
@@ -102,8 +102,8 @@ def send_alert_thread(threat_type, suspect_frame):
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as server:
             server.login(SENDER_EMAIL, EMAIL_PASSWORD)
             server.send_message(msg)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"⚠️ EMAIL FAILED: {e}")
 
 def run_clip_search(frame):
     global suspect_data
